@@ -1,9 +1,10 @@
-import express, { Request, Response, NextFunction } from "express";
+import express, { Request, Response } from "express";
 import multer from "multer";
 import nodemailer from "nodemailer";
 import bodyParser from "body-parser";
 import path from "path";
 import dotenv from "dotenv";
+import cors from "cors";
 
 dotenv.config();
 
@@ -11,6 +12,7 @@ const app = express();
 const upload = multer({ dest: "uploads/" });
 
 // Middleware
+app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -35,7 +37,7 @@ interface PriceItem {
 app.post(
   "/send-email",
   upload.array("files"),
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { name, email, prices, totalPrice } = req.body;
       const files = req.files as Express.Multer.File[];
