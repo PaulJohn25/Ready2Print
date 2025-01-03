@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import cors from "cors";
+import { error } from "console";
 
 dotenv.config();
 
@@ -28,6 +29,14 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD,
   },
+});
+
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("Error verifying email configuration:", error);
+  } else {
+    console.log("Email configuration is correct");
+  }
 });
 
 // Define interface for price object

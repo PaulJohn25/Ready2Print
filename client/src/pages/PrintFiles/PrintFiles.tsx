@@ -99,6 +99,8 @@ const PrintFiles = () => {
         title: "Error",
         description: "An error occurred while submitting your print job.",
       });
+      clearFiles();
+      navigate("/");
     }
   };
 
