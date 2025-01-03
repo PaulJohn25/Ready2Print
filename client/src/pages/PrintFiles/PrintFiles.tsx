@@ -85,6 +85,9 @@ const PrintFiles = () => {
         {
           method: "POST",
           body: formData,
+          headers: {
+            Accept: "application/json",
+          },
         }
       );
 

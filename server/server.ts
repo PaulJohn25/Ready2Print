@@ -9,7 +9,7 @@ dotenv.config();
 
 const app = express();
 
-const allowedOrigins = ["https://ready2-print.vercel.app/"];
+const allowedOrigins = ["https://ready2-print.vercel.app"];
 
 // Configure multer to use memory storage instead of disk storage
 const storage = multer.memoryStorage();
