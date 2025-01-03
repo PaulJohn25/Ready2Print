@@ -96,6 +96,7 @@ const FileEditDialog = ({
               </Button>
             </DialogClose>
             <Button
+              type="button"
               className="w-full sm:w-auto bg-slate-800 text-sm font-bold hover:bg-slate-700 font-montserrat"
               onClick={() => {
                 onApplyChanges();
