@@ -80,10 +80,13 @@ const PrintFiles = () => {
         PDFUtils.calculateTotalPrintCost(files).toString()
       );
 
-      const response = await fetch("http://localhost:5000/send-email", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "https://ready2-print-server.vercel.app/send-email",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
