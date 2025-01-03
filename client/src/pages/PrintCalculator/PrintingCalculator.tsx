@@ -47,6 +47,7 @@ const PrintingCalculator = () => {
         console.log(pagesWithImages);
 
         const newFile = {
+          file: file,
           id: files.length + 1,
           preview: URL.createObjectURL(file),
           paperType: "A4" as PaperType,
