@@ -133,7 +133,7 @@ const PrintFiles = () => {
                         </FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Enter your name"
+                            placeholder=""
                             {...field}
                             className="font-montserrat font-semibold"
                           />
@@ -152,7 +152,7 @@ const PrintFiles = () => {
                         </FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Enter your email"
+                            placeholder=""
                             {...field}
                             className="font-montserrat font-semibold"
                           />
