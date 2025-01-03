@@ -183,7 +183,7 @@ const PrintingCalculator = () => {
           </div>
 
           {isAnalyzing ? (
-            <LoadingSpinner />
+            <LoadingSpinner textIndicator="Analyzing PDF File..." />
           ) : (
             files.length > 0 && (
               <UploadedFiles

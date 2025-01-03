@@ -6,6 +6,7 @@ interface UploadedFilesProps {
   title: string;
   onFileEdit: (file: PrintPreferences) => void;
   onFileDelete: (file: PrintPreferences) => void;
+  isSubmitting?: boolean;
 }
 
 const UploadedFiles = ({
@@ -13,6 +14,7 @@ const UploadedFiles = ({
   onFileEdit,
   onFileDelete,
   title,
+  isSubmitting,
 }: UploadedFilesProps) => {
   return (
     <>
@@ -28,6 +30,7 @@ const UploadedFiles = ({
                 file={file}
                 onEdit={onFileEdit}
                 onDelete={onFileDelete}
+                isSubmitting={isSubmitting}
               />
             ))}
           </ul>

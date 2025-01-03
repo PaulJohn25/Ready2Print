@@ -6,9 +6,10 @@ interface FileItemProps {
   file: PrintPreferences;
   onEdit: (file: PrintPreferences) => void;
   onDelete: (file: PrintPreferences) => void;
+  isSubmitting?: boolean;
 }
 
-const FileItem = ({ file, onEdit, onDelete }: FileItemProps) => {
+const FileItem = ({ file, onEdit, onDelete, isSubmitting }: FileItemProps) => {
   return (
     <>
       <li
@@ -28,6 +29,7 @@ const FileItem = ({ file, onEdit, onDelete }: FileItemProps) => {
               size="icon"
               className="text-slate-700 hover:text-slate-800 bg-blue-200 hover:bg-blue-100"
               onClick={() => onEdit(file)}
+              disabled={isSubmitting}
             >
               <FileCog className="w-4 h-4" />
             </Button>
@@ -36,6 +38,7 @@ const FileItem = ({ file, onEdit, onDelete }: FileItemProps) => {
               size="icon"
               onClick={() => onDelete(file)}
               className="text-red-500 hover:text-red-700 bg-red-100 hover:bg-red-200"
+              disabled={isSubmitting}
             >
               <X className="w-4 h-4" />
             </Button>

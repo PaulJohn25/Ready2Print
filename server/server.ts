@@ -40,8 +40,9 @@ transporter.verify((error, success) => {
 });
 
 // Define interface for price object
-interface PriceItem {
+interface FileDetails {
   id: string;
+  fileName: string;
   price: number;
 }
 
@@ -70,17 +71,20 @@ app.post(
       }
 
       // Parse prices with error handling
-      let parsedPrices: PriceItem[];
+      let pdfDetails: FileDetails[];
       try {
-        parsedPrices = JSON.parse(prices);
+        pdfDetails = JSON.parse(prices);
       } catch (error) {
         res.status(400).json({ message: "Invalid prices format" });
         return;
       }
 
       // Create email content
-      const filesDetails = parsedPrices
-        .map((price) => `File ID: ${price.id}, Price: ₱${price.price}`)
+      const filesDetails = pdfDetails
+        .map(
+          (price) =>
+            `File ID: ${price.id}, File Name: ${price.fileName} Price: ₱${price.price}`
+        )
         .join("\n");
 
       const emailBody = `
@@ -103,7 +107,7 @@ app.post(
       }));
 
       const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: email,
         to: process.env.EMAIL_USER,
         replyTo: email,
         subject: "New Print Job Submission",

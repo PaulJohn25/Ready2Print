@@ -10,7 +10,11 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileEditDialog, UploadedFiles } from "@/components/custom";
+import {
+  FileEditDialog,
+  LoadingSpinner,
+  UploadedFiles,
+} from "@/components/custom";
 import usePrintStore from "@/stores/printStore";
 import { PrintPreferences } from "@/types/printPreferences";
 import { ArrowLeft, Printer } from "lucide-react";
@@ -47,6 +51,8 @@ const PrintFiles = () => {
     },
   });
 
+  const { isSubmitting } = form.formState;
+
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -63,6 +69,7 @@ const PrintFiles = () => {
 
       const prices = files.map((file) => ({
         id: file.id,
+        fileName: file.name,
         price: file.totalPrintCost,
       }));
 
@@ -218,6 +225,7 @@ const PrintFiles = () => {
                     title="Files To Print:"
                     onFileEdit={handleEditFile}
                     onFileDelete={handleDeleteFile}
+                    isSubmitting={isSubmitting}
                   />
                   <div className="flex items-center gap-1 justify-end">
                     <h3 className="font-montserrat text-base font-bold text-slate-700">
@@ -227,24 +235,28 @@ const PrintFiles = () => {
                       ₱{PDFUtils.calculateTotalPrintCost(files)}.00
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <Button
-                      className="font-montserrat text-sm font-bold"
-                      variant="secondary"
-                      onClick={() => navigate("/")}
-                      type="button"
-                    >
-                      {" "}
-                      <ArrowLeft /> Back
-                    </Button>
-                    <Button
-                      className="sm:w-auto bg-slate-800 text-sm font-bold hover:bg-slate-700 font-montserrat"
-                      variant="default"
-                      type="submit"
-                    >
-                      Submit Print Job
-                    </Button>
-                  </div>
+                  {!isSubmitting ? (
+                    <div className="flex justify-between">
+                      <Button
+                        className="font-montserrat text-sm font-bold"
+                        variant="secondary"
+                        onClick={() => navigate("/")}
+                        type="button"
+                      >
+                        {" "}
+                        <ArrowLeft /> Back
+                      </Button>
+                      <Button
+                        className="sm:w-auto bg-slate-800 text-sm font-bold hover:bg-slate-700 font-montserrat"
+                        variant="default"
+                        type="submit"
+                      >
+                        Submit Print Job
+                      </Button>
+                    </div>
+                  ) : (
+                    <LoadingSpinner textIndicator="Submitting print job..." />
+                  )}
                 </form>
               </div>
             </Form>
