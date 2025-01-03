@@ -137,7 +137,7 @@ app.get("/", (req: Request, res: Response): void => {
   res.json({ message: "Server is running..." });
 });
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000; // For local development
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Email user configured: ${!!process.env.EMAIL_USER}`);
