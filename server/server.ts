@@ -1,11 +1,11 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import multer from "multer";
 import nodemailer from "nodemailer";
 import bodyParser from "body-parser";
-// import path from "path";
-// import fs from "fs";
+import path from "path";
+import dotenv from "dotenv";
 
-require("dotenv").config();
+dotenv.config();
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
@@ -23,32 +23,72 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-transporter.sendMail(
-  {
-    from: process.env.EMAIL_USER,
-    to: "johnpaulnidua@gmail.com",
-    subject: "Test Email",
-    text: "This is a test email",
-  },
-  (error, info) => {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log("Email sent: " + info.response);
+// Define interface for price object
+interface PriceItem {
+  id: string;
+  price: number;
+}
+
+app.post(
+  "/send-email",
+  upload.array("files"),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { name, email, prices, totalPrice } = req.body;
+      const files = req.files as Express.Multer.File[];
+
+      if (!name || !email || !prices || !totalPrice || !files) {
+        res.status(400).json({ message: "All fields are required" });
+        return;
+      }
+
+      const parsedPrices: PriceItem[] = JSON.parse(prices);
+
+      // Create email content
+      const filesDetails = parsedPrices
+        .map((price) => `File ID: ${price.id}, Price: ${price.price}`)
+        .join("\n");
+
+      const emailBody = `
+      Name: ${name}
+      Email: ${email}
+
+      Files and Pricing:
+      ${filesDetails}
+
+      Total Price: ${totalPrice}.00
+      `;
+
+      const attachments = files.map((file) => ({
+        filename: file.originalname,
+        path: path.resolve(file.path),
+      }));
+
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: process.env.EMAIL_USER,
+        replyTo: email,
+        subject: "New Print Job Submission",
+        text: emailBody,
+        attachments,
+      };
+
+      await transporter.sendMail(mailOptions);
+      res.status(200).json({ message: "Email sent successfully" });
+    } catch (error) {
+      console.error("Error sending email:", error);
+      res.status(500).json({ message: "Failed to send email", error });
     }
   }
 );
 
-app.get("/", (req: Request, res: Response) => {
+app.get("/", (req: Request, res: Response): void => {
   res.send("Server is running...");
 });
 
-app.get("/api", (req: Request, res: Response) => {
-  res.json({ users: ["userOne", "userTwo", "userThree"] });
-});
-
-app.listen(5000, () => {
-  console.log("Server is running on port 5000");
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
 
 export default app;

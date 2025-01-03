@@ -50,16 +50,56 @@ const PrintFiles = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    toast({
-      variant: "success",
-      title: "Simulation",
-      description:
-        "This is just a simulation. Actual submission is currently in progress or still working.",
-    });
-    clearFiles();
-    console.log(`Name: ${data.name} Email: ${data.email}`);
-    navigate("/");
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    try {
+      const formData = new FormData();
+
+      formData.append("name", data.name);
+      formData.append("email", data.email);
+
+      files.forEach((file) => {
+        formData.append("files", file.file);
+      });
+
+      const prices = files.map((file) => ({
+        id: file.id,
+        price: file.totalPrintCost,
+      }));
+
+      formData.append("prices", JSON.stringify(prices));
+
+      formData.append(
+        "totalPrice",
+        PDFUtils.calculateTotalPrintCost(files).toString()
+      );
+
+      const response = await fetch("http://localhost:5000/send-email", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("Email sent successfully:", result);
+
+      toast({
+        variant: "success",
+        title: "Success",
+        description: "Your print job has been submitted successfully!",
+      });
+      clearFiles();
+      navigate("/");
+    } catch (error) {
+      console.log("Error submitting print job:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An error occurred while submitting your print job.",
+      });
+    }
   };
 
   const [isEditFileDialogOpen, setIsEditFileDialogOpen] = useState(false);
