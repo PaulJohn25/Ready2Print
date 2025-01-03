@@ -4,11 +4,12 @@ import nodemailer from "nodemailer";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import cors from "cors";
-import { error } from "console";
 
 dotenv.config();
 
 const app = express();
+
+const allowedOrigins = ["https://ready2-print.vercel.app"];
 
 // Configure multer to use memory storage instead of disk storage
 const storage = multer.memoryStorage();
@@ -18,7 +19,12 @@ const upload = multer({
 });
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  })
+);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
