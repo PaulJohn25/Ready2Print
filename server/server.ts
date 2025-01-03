@@ -29,6 +29,9 @@ interface PriceItem {
   price: number;
 }
 
+// Send email route
+// POST /send-email
+// Send email with print job details
 app.post(
   "/send-email",
   upload.array("files"),
@@ -86,7 +89,7 @@ app.get("/", (req: Request, res: Response): void => {
   res.send("Server is running...");
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
