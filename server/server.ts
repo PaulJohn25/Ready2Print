@@ -83,7 +83,7 @@ app.post(
       const filesDetails = pdfDetails
         .map(
           (price) =>
-            `File ID: ${price.id}, File Name: ${price.fileName} Price: ₱${price.price}`
+            `File ID: ${price.id}, File Name: ${price.fileName} Price: ₱${price.price}\n`
         )
         .join("\n");
 
