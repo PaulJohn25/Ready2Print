@@ -2,6 +2,10 @@ import express, { Request, Response } from "express";
 
 const app = express();
 
+app.get("/", (req: Request, res: Response) => {
+  res.send("Server is running...");
+});
+
 app.get("/api", (req: Request, res: Response) => {
   res.json({ users: ["userOne", "userTwo", "userThree"] });
 });
