@@ -1,6 +1,7 @@
 import { PaperType, ColorMode, PrintSide } from "./printSettings";
 
 export interface PrintPreferences {
+  file: File;
   id: number;
   preview: string;
   paperType: PaperType;
