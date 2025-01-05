@@ -64,32 +64,29 @@ const PrintFiles = () => {
       formData.append("email", data.email);
 
       files.forEach((file) => {
-        formData.append("files", file.file);
+        formData.append("uploadedFiles", file.file);
       });
 
-      const prices = files.map((file) => ({
+      const file = files.map((file) => ({
         id: file.id,
         fileName: file.name,
         price: file.totalPrintCost,
       }));
 
-      formData.append("prices", JSON.stringify(prices));
+      formData.append("files", JSON.stringify(file));
 
       formData.append(
         "totalPrice",
         PDFUtils.calculateTotalPrintCost(files).toString()
       );
 
-      const response = await fetch(
-        "https://ready2-print-server.vercel.app/send-email",
-        {
-          method: "POST",
-          body: formData,
-          headers: {
-            Accept: "application/json",
-          },
-        }
-      );
+      const response = await fetch(import.meta.env.VITE_SEND_EMAIL_API, {
+        method: "POST",
+        body: formData,
+        headers: {
+          Accept: "application/json",
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

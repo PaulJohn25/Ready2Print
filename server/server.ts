@@ -9,13 +9,13 @@ dotenv.config();
 
 const app = express();
 
-const allowedOrigins = ["https://ready2-print.vercel.app"];
+const allowedOrigins = process.env.ALLOWED_ORIGINS || "http://localhost:5000";
 
 // Configure multer to use memory storage instead of disk storage
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
 });
 
 // Middleware
@@ -55,23 +55,23 @@ interface FileDetails {
 // Send email route
 app.post(
   "/send-email",
-  upload.array("files"),
+  upload.array("uploadedFiles"),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       console.log("Request body:", req.body);
-      const { name, email, prices, totalPrice } = req.body;
-      const files = req.files as Express.Multer.File[];
+      const { name, email, prices: files, totalPrice } = req.body;
+      const uploadedFiles = req.files as Express.Multer.File[];
 
       // Validate required fields
-      if (!name || !email || !prices || !totalPrice) {
+      if (!name || !email || !files || !totalPrice) {
         res.status(400).json({
           message: "Missing required fields",
-          received: { name, email, hasPrices: !!prices, totalPrice },
+          received: { name, email, hasPrices: !!files, totalPrice },
         });
         return;
       }
 
-      if (!files || files.length === 0) {
+      if (!uploadedFiles || uploadedFiles.length === 0) {
         res.status(400).json({ message: "No files uploaded" });
         return;
       }
@@ -79,7 +79,7 @@ app.post(
       // Parse prices with error handling
       let pdfDetails: FileDetails[];
       try {
-        pdfDetails = JSON.parse(prices);
+        pdfDetails = JSON.parse(files);
       } catch (error) {
         res.status(400).json({ message: "Invalid prices format" });
         return;
@@ -88,8 +88,8 @@ app.post(
       // Create email content
       const filesDetails = pdfDetails
         .map(
-          (price) =>
-            `File ID: ${price.id}, File Name: ${price.fileName} Price: ₱${price.price}\n`
+          (file) =>
+            `File ID: ${file.id}, File Name: ${file.fileName} Price: ₱${file.price}`
         )
         .join("\n");
 
@@ -107,7 +107,7 @@ app.post(
       `;
 
       // Create attachments using buffer instead of file path
-      const attachments = files.map((file) => ({
+      const attachments = uploadedFiles.map((file) => ({
         filename: file.originalname,
         content: file.buffer, // Use buffer instead of file path
       }));
