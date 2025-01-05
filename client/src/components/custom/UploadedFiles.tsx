@@ -18,7 +18,7 @@ const UploadedFiles = ({
 }: UploadedFilesProps) => {
   return (
     <>
-      <div className="mt-4">
+      <div className="mt-4" role="group">
         <h3 className="capitalize text-sm font-bold mb-4 text-blue-800 tracking-light font-montserrat select-none">
           {title}
         </h3>

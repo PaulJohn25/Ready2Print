@@ -26,13 +26,13 @@ const PrintSideRadioButtons = ({
           }
         >
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="Print One Sided" id="printOneSided" />
+            <RadioGroupItem value="One Sided" id="printOneSided" />
             <Label htmlFor="printOneSided">
               Print One Sided (Only Front Side)
             </Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="Print on Both Sides" id="printOnBothSides" />
+            <RadioGroupItem value="Both Sides" id="printOnBothSides" />
             <Label htmlFor="printOnBothSides">
               Print on Both Sides (Double Sided)
             </Label>

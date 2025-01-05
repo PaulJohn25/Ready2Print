@@ -52,7 +52,7 @@ const PrintingCalculator = () => {
           preview: URL.createObjectURL(file),
           paperType: "A4" as PaperType,
           colorMode: "Black & White" as ColorMode,
-          printSide: "Print One Sided" as PrintSide,
+          printSide: "One Sided" as PrintSide,
           totalPrintCost: 0,
           pagesWithImages: pagesWithImages,
           totalPages: pages,

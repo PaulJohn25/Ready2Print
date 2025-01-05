@@ -6,6 +6,7 @@ import PaperTypeSelect from "./PaperTypeSelect";
 import PrintSideRadioButtons from "./PrintSideRadioButtons";
 import UploadedFiles from "./UploadedFiles";
 import FileItem from "./FileItem";
+import FileDetailsCard from "./FileDetailsCard";
 
 export {
   ColorModeRadioButtons,
@@ -16,4 +17,5 @@ export {
   PrintSideRadioButtons,
   UploadedFiles,
   FileItem,
+  FileDetailsCard,
 };

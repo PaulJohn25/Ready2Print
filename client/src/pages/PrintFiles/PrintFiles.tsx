@@ -13,18 +13,20 @@ import { Button } from "@/components/ui/button";
 import {
   FileEditDialog,
   LoadingSpinner,
-  UploadedFiles,
+  FileDetailsCard,
 } from "@/components/custom";
 import usePrintStore from "@/stores/printStore";
 import { PrintPreferences } from "@/types/printPreferences";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Printer, File } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { AlertCircle } from "lucide-react";
-import { z } from "zod";
+import { Badge } from "@/components/ui/badge";
 import PDFUtils from "@/pdf-utils/pdfUtils";
+
+import { z } from "zod";
 
 const formSchema = z.object({
   name: z
@@ -134,11 +136,6 @@ const PrintFiles = () => {
     }
   };
 
-  const handleEditFile = (file: PrintPreferences) => {
-    setFileBeingEdited({ ...file });
-    setIsEditFileDialogOpen(true);
-  };
-
   const applyChanges = () => {
     if (fileBeingEdited) {
       const updatedFiles = files.map((file) =>
@@ -223,13 +220,28 @@ const PrintFiles = () => {
                       submitting your print job.
                     </AlertDescription>
                   </Alert>
-                  <UploadedFiles
-                    files={files}
-                    title="Files To Print:"
-                    onFileEdit={handleEditFile}
-                    onFileDelete={handleDeleteFile}
-                    isSubmitting={isSubmitting}
-                  />
+                  <div>
+                    <div role="group" className="flex items-center gap-1 mb-2">
+                      <h3 className="capitalize text-sm font-bold  text-blue-800 tracking-light font-montserrat select-none">
+                        Files To Print
+                      </h3>
+                      <Badge
+                        variant="default"
+                        className="bg-blue-800 font-montserrat"
+                      >
+                        {files.length}
+                      </Badge>
+                    </div>
+                    <div className="overflow-y-auto mx-auto">
+                      <ul className="space-y-2">
+                        {files.map((file) => (
+                          <li key={file.id}>
+                            <FileDetailsCard file={file}/>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
                   <div className="flex items-center gap-1 justify-end">
                     <h3 className="font-montserrat text-base font-bold text-slate-700">
                       Total Cost:
