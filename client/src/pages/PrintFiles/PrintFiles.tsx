@@ -10,15 +10,10 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  FileEditDialog,
-  LoadingSpinner,
-  FileDetailsCard,
-} from "@/components/custom";
+import { LoadingSpinner, FileDetailsCard } from "@/components/custom";
 import usePrintStore from "@/stores/printStore";
-import { PrintPreferences } from "@/types/printPreferences";
-import { ArrowLeft, Printer, File } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowLeft, Printer } from "lucide-react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -116,40 +111,7 @@ const PrintFiles = () => {
     }
   };
 
-  const [isEditFileDialogOpen, setIsEditFileDialogOpen] = useState(false);
-  const [fileBeingEdited, setFileBeingEdited] =
-    useState<PrintPreferences | null>(null);
-  const { files, setFiles, deleteFile, clearFiles } = usePrintStore();
-
-  const handleFieldChange = <T extends keyof PrintPreferences>(
-    field: T,
-    value: PrintPreferences[T]
-  ) => {
-    if (fileBeingEdited) {
-      const updatedFile = { ...fileBeingEdited, [field]: value };
-
-      if (field === "paperType") {
-        updatedFile.totalPrintCost = PDFUtils.calculatePrintCost(updatedFile);
-      }
-
-      setFileBeingEdited(updatedFile);
-    }
-  };
-
-  const applyChanges = () => {
-    if (fileBeingEdited) {
-      const updatedFiles = files.map((file) =>
-        file.id === fileBeingEdited.id ? { ...fileBeingEdited } : file
-      );
-      setFiles(updatedFiles);
-      setFileBeingEdited(null);
-    }
-  };
-
-  const handleDeleteFile = (file: PrintPreferences) => {
-    deleteFile(file);
-    URL.revokeObjectURL(file.preview);
-  };
+  const { files, clearFiles } = usePrintStore();
 
   useEffect(() => {
     if (files.length === 0) {
@@ -236,7 +198,7 @@ const PrintFiles = () => {
                       <ul className="space-y-2">
                         {files.map((file) => (
                           <li key={file.id}>
-                            <FileDetailsCard file={file}/>
+                            <FileDetailsCard file={file} />
                           </li>
                         ))}
                       </ul>
@@ -290,13 +252,6 @@ const PrintFiles = () => {
       <p className="text-center font-montserrat text-xs text-slate-500 tracking-tight font-semibold">
         &copy; {new Date().getFullYear()} Ready2Print. All rights reserved.
       </p>
-      <FileEditDialog
-        open={isEditFileDialogOpen}
-        onOpenChange={setIsEditFileDialogOpen}
-        onApplyChanges={applyChanges}
-        onFieldChange={handleFieldChange}
-        file={fileBeingEdited}
-      />
     </>
   );
 };
