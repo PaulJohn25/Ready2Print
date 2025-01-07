@@ -199,7 +199,7 @@ const PrintingCalculator = () => {
         <CardFooter className="flex items-end flex-col bg-blue-50 p-6 gap-4">
           <Button
             className="w-full sm:w-auto bg-slate-800 text-sm font-bold hover:bg-slate-700 font-montserrat"
-            disabled={files.length === 0 && isAnalyzing}
+            disabled={files.length === 0 || isAnalyzing}
             onClick={() => navigate("/print-files")}
           >
             Print Files
