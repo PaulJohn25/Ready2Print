@@ -59,10 +59,8 @@ app.post(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       console.log("Request body:", req.body);
-      const { name, email, totalPrice } = req.body;
+      const { name, email, files, totalPrice } = req.body;
       const uploadedFiles = req.files as Express.Multer.File[];
-
-      const files = JSON.parse(req.body.files || "[]");
 
       // Validate required fields
       if (!name || !email || !files || !totalPrice) {
