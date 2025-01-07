@@ -160,7 +160,10 @@ const PrintingCalculator = () => {
               automatically after printing.
             </AlertDescription>
           </Alert>
-          <div className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors mt-4 border-gray-300 hover:border-blue-600 hover:bg-blue-50">
+          <div
+            className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors mt-4 border-gray-300 hover:border-blue-600 hover:bg-blue-50"
+            onClick={(e) => isAnalyzing && e.preventDefault()}
+          >
             <input
               disabled={isAnalyzing}
               type="file"
