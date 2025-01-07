@@ -161,7 +161,9 @@ const PrintingCalculator = () => {
             </AlertDescription>
           </Alert>
           <div
-            className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors mt-4 border-gray-300 hover:border-blue-600 hover:bg-blue-50"
+            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors mt-4 border-gray-300 ${
+              isAnalyzing ? "border-gray-300" : "hover:border-blue-600"
+            } hover:bg-blue-50`}
             onClick={(e) => isAnalyzing && e.preventDefault()}
           >
             <input
