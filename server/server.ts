@@ -45,7 +45,7 @@ transporter.verify((error, success) => {
   }
 });
 
-// Define interface for price object
+// Define interface for file object
 interface FileDetails {
   id: string;
   fileName: string;
@@ -59,14 +59,16 @@ app.post(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       console.log("Request body:", req.body);
-      const { name, email, prices: files, totalPrice } = req.body;
+      const { name, email, totalPrice } = req.body;
       const uploadedFiles = req.files as Express.Multer.File[];
+
+      const files = JSON.parse(req.body.files || "[]");
 
       // Validate required fields
       if (!name || !email || !files || !totalPrice) {
         res.status(400).json({
           message: "Missing required fields",
-          received: { name, email, hasPrices: !!files, totalPrice },
+          received: { name, email, files, totalPrice },
         });
         return;
       }
