@@ -162,6 +162,7 @@ const PrintingCalculator = () => {
           </Alert>
           <div className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors mt-4 border-gray-300 hover:border-blue-600 hover:bg-blue-50">
             <input
+              disabled={isAnalyzing}
               type="file"
               onChange={async (e) => await handleFileSelect(e)}
               accept=".pdf"
@@ -198,7 +199,7 @@ const PrintingCalculator = () => {
         <CardFooter className="flex items-end flex-col bg-blue-50 p-6 gap-4">
           <Button
             className="w-full sm:w-auto bg-slate-800 text-sm font-bold hover:bg-slate-700 font-montserrat"
-            disabled={files.length === 0}
+            disabled={files.length === 0 && isAnalyzing}
             onClick={() => navigate("/print-files")}
           >
             Print Files
