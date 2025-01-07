@@ -64,13 +64,13 @@ const PrintFiles = () => {
         formData.append("uploadedFiles", file.file);
       });
 
-      const file = files.map((file) => ({
+      const fileMetadata = files.map((file) => ({
         id: file.id,
         fileName: file.name,
         price: file.totalPrintCost,
       }));
 
-      formData.append("files", JSON.stringify(file));
+      formData.append("files", JSON.stringify(fileMetadata));
 
       formData.append(
         "totalPrice",
@@ -80,9 +80,6 @@ const PrintFiles = () => {
       const response = await fetch(import.meta.env.VITE_SEND_EMAIL_API, {
         method: "POST",
         body: formData,
-        headers: {
-          Accept: "application/json",
-        },
       });
 
       if (!response.ok) {
