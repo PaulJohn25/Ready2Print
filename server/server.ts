@@ -13,7 +13,7 @@ dotenv.config();
 
 const app = express();
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS || "http://localhost:5000";
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "").split(",");
 
 // Configure multer to use memory storage
 const storage = multer.memoryStorage();
