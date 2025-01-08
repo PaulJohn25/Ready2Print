@@ -14,7 +14,7 @@ dotenv.config();
 const app = express();
 
 // Ensure allowed origins are properly formatted
-const allowedOrigins = ["http://localhost:5173"];
+const allowedOrigins = ["http://localhost:5000"];
 if (process.env.ALLOWED_ORIGINS) {
   allowedOrigins.push(
     ...process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
