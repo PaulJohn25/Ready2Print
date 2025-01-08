@@ -9,6 +9,17 @@ import { v4 as uuidv4 } from "uuid"; // To generate unique file names
 
 dotenv.config();
 
+// Debug: Check environment variables
+if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+  console.error("Error: FIREBASE_SERVICE_ACCOUNT is not set.");
+}
+if (!process.env.FIREBASE_STORAGE_BUCKET) {
+  console.error("Error: FIREBASE_STORAGE_BUCKET is not set.");
+}
+if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+  console.error("Error: Email configuration is incomplete.");
+}
+
 const serviceAccount = JSON.parse(
   Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT || "", "base64").toString(
     "utf-8"
@@ -28,6 +39,9 @@ const firestore = admin.firestore();
 const app = express();
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS || "http://localhost:5000";
+
+// Debug: Log allowed origins
+console.log("Allowed Origins:", allowedOrigins);
 
 // Configure multer to use memory storage instead of disk storage
 const storage = multer.memoryStorage();
@@ -76,12 +90,21 @@ app.post(
   upload.array("uploadedFiles"),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+      console.log("Received POST /send-email request");
       console.log("Request body:", req.body);
+      console.log("Uploaded files:", req.files);
+
       const { name, email, files, totalPrice } = req.body;
       const uploadedFiles = req.files as Express.Multer.File[];
 
       // Validate required fields
       if (!name || !email || !files || !totalPrice) {
+        console.error("Missing required fields:", {
+          name,
+          email,
+          files,
+          totalPrice,
+        });
         res.status(400).json({
           message: "Missing required fields",
           received: { name, email, files, totalPrice },
@@ -90,6 +113,7 @@ app.post(
       }
 
       if (!uploadedFiles || uploadedFiles.length === 0) {
+        console.error("No files uploaded");
         res.status(400).json({ message: "No files uploaded" });
         return;
       }
@@ -98,15 +122,19 @@ app.post(
       let pdfDetails: FileDetails[];
       try {
         pdfDetails = JSON.parse(files);
+        console.log("Parsed files:", pdfDetails);
       } catch (error) {
+        console.error("Invalid prices format:", error);
         res.status(400).json({ message: "Invalid prices format" });
         return;
       }
 
       const uploadFileUrls: string[] = [];
+      console.log("Uploading files to Firebase Storage...");
 
       for (const file of uploadedFiles) {
         const fileName = `${uuidv4()}-${file.originalname}`;
+        console.log(`Uploading file: ${fileName}`);
         const fileUpload = bucket.file(fileName);
         await fileUpload.save(file.buffer, {
           contentType: file.mimetype,
@@ -114,10 +142,11 @@ app.post(
         });
 
         const fileUrl = `https://storage.googleapis.com/${process.env.FIREBASE_STORAGE_BUCKET}/${fileName}`;
+        console.log(`Uploaded file URL: ${fileUrl}`);
         uploadFileUrls.push(fileUrl);
       }
 
-      // Save print job details in Firestore
+      console.log("Saving print job details to Firestore...");
       await firestore.collection("printJobs").add({
         name,
         email,
@@ -131,7 +160,7 @@ app.post(
       const filesDetails = pdfDetails
         .map(
           (file) =>
-            `File ID: ${file.id}, File Name: ${file.fileName} Price: ₱${file.price}`
+            `File ID: ${file.id}, File Name: ${file.fileName}, Price: ₱${file.price}`
         )
         .join("\n");
 
@@ -150,11 +179,7 @@ app.post(
       Files uploaded: ${uploadFileUrls.join(", ")}
       `;
 
-      // Create attachments using buffer instead of file path
-      // const attachments = uploadedFiles.map((file) => ({
-      //   filename: file.originalname,
-      //   content: file.buffer, // Use buffer instead of file path
-      // }));
+      console.log("Sending email with the following content:", emailBody);
 
       const mailOptions = {
         from: email,
@@ -165,6 +190,7 @@ app.post(
       };
 
       await transporter.sendMail(mailOptions);
+      console.log("Email sent successfully");
       res.status(200).json({ message: "Email sent successfully" });
     } catch (error) {
       console.error("Error details:", error);
@@ -177,6 +203,7 @@ app.post(
 );
 
 app.get("/", (req: Request, res: Response): void => {
+  console.log("GET / request received");
   res.json({ message: "Server is running..." });
 });
 
