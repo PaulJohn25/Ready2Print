@@ -76,10 +76,13 @@ const PrintFiles = () => {
         PDFUtils.calculateTotalPrintCost(files).toString()
       );
 
-      const response = await fetch(import.meta.env.VITE_SEND_EMAIL_API, {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        import.meta.env.VITE_SEND_EMAIL_API,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
