@@ -116,7 +116,7 @@ app.post(
       }
 
       // Save print job details in Firestore
-      const docRef = await firestore.collection("printJobs").add({
+      await firestore.collection("printJobs").add({
         name,
         email,
         files: pdfDetails,
