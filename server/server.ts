@@ -22,6 +22,8 @@ const upload = multer({
   limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
 });
 
+console.log(allowedOrigins);
+
 // Middleware
 app.use(
   cors({
@@ -75,7 +77,9 @@ app.post(
       const archive = archiver("zip", { zlib: { level: 9 } });
 
       output.on("close", () => {
-        console.log(`Zip file created: ${zipFilePath} (${archive.pointer()} bytes)`);
+        console.log(
+          `Zip file created: ${zipFilePath} (${archive.pointer()} bytes)`
+        );
       });
 
       archive.on("error", (err) => {
@@ -112,7 +116,9 @@ Here are your files in a zip archive. Total Price: ₱${totalPrice}.00`,
       // Clean up the zip file after sending
       fs.unlinkSync(zipFilePath);
 
-      res.status(200).json({ message: "Email sent successfully with zip file" });
+      res
+        .status(200)
+        .json({ message: "Email sent successfully with zip file" });
     } catch (error) {
       console.error("Error details:", error);
       res.status(500).json({
