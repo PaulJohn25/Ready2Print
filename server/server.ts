@@ -19,7 +19,6 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS || "http://localhost:5000";
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
 });
 
 console.log(allowedOrigins);
