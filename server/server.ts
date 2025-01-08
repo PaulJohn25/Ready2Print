@@ -15,6 +15,8 @@ const serviceAccount = JSON.parse(
   )
 );
 
+console.log("Decoded Service Account:", serviceAccount);
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
