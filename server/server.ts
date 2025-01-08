@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import multer from "multer";
 import nodemailer from "nodemailer";
 import archiver from "archiver";
@@ -7,56 +7,88 @@ import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 import cors from "cors";
-import { v4 as uuidv4 } from "uuid"; // To generate unique file names
+import { v4 as uuidv4 } from "uuid";
 
 dotenv.config();
 
 const app = express();
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || "").split(",");
+// Ensure allowed origins are properly formatted
+const allowedOrigins = ["http://localhost:5173"];
+if (process.env.ALLOWED_ORIGINS) {
+  allowedOrigins.push(
+    ...process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
+  );
+}
 
-// Configure multer to use memory storage
+// Configure CORS with proper error handling
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true, // Enable credentials (cookies, authorization headers, etc.)
+  })
+);
+
+// Increase payload size limits
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
+
+// Configure multer with error handling and size limits
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
-});
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB limit
+    files: 10, // Maximum 10 files
+  },
+}).array("uploadedFiles");
 
-console.log(allowedOrigins);
+// Wrapper for multer error handling
+const uploadMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  upload(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({
+        message: "File upload error",
+        error: err.message,
+      });
+    } else if (err) {
+      return res.status(500).json({
+        message: "Unknown error",
+        error: err.message,
+      });
+    }
+    next();
+  });
+};
 
-// Middleware
-app.use(
-  cors({
-    origin: allowedOrigins,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"], // Allow custom headers
-  })
-);
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-
-// Nodemailer setup
+// Enhanced error handling for email transport
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD,
   },
+  maxConnections: 5,
+  pool: true,
 });
 
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("Error verifying email configuration:", error);
-  } else {
-    console.log("Email configuration is correct");
-  }
-});
-
+// Email route with better error handling
 app.post(
   "/send-email",
-  upload.array("uploadedFiles"),
+  uploadMiddleware,
   async (req: Request, res: Response): Promise<void> => {
     try {
-      console.log("Request body:", req.body);
       const { name, email, totalPrice } = req.body;
       const uploadedFiles = req.files as Express.Multer.File[];
 
@@ -64,56 +96,49 @@ app.post(
       if (!name || !email || !uploadedFiles || uploadedFiles.length === 0) {
         res.status(400).json({
           message: "Missing required fields",
-          received: { name, email, totalPrice },
+          received: {
+            name,
+            email,
+            totalPrice,
+            filesCount: uploadedFiles?.length || 0,
+          },
         });
         return;
       }
 
       const zipFileName = `${uuidv4()}.zip`;
       const zipFilePath = path.join(__dirname, zipFileName);
-
-      // Create a zip archive
       const output = fs.createWriteStream(zipFilePath);
       const archive = archiver("zip", { zlib: { level: 9 } });
 
-      output.on("close", () => {
-        console.log(
-          `Zip file created: ${zipFilePath} (${archive.pointer()} bytes)`
-        );
+      // Promise wrapper for zip creation
+      await new Promise((resolve, reject) => {
+        output.on("close", resolve);
+        archive.on("error", reject);
+        archive.pipe(output);
+
+        uploadedFiles.forEach((file) => {
+          archive.append(file.buffer, { name: file.originalname });
+        });
+
+        archive.finalize();
       });
 
-      archive.on("error", (err) => {
-        throw err;
-      });
-
-      archive.pipe(output);
-
-      // Append files to the zip
-      uploadedFiles.forEach((file) => {
-        archive.append(file.buffer, { name: file.originalname });
-      });
-
-      await archive.finalize();
-
-      // Send the email with the zip file as an attachment
-      const mailOptions = {
+      // Send email
+      await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: email,
         subject: "Your Uploaded Files",
-        text: `Hello ${name},
-
-Here are your files in a zip archive. Total Price: ₱${totalPrice}.00`,
+        text: `Hello ${name},\n\nHere are your files in a zip archive. Total Price: ₱${totalPrice}.00`,
         attachments: [
           {
             filename: zipFileName,
-            path: zipFilePath, // Attach the zip file
+            path: zipFilePath,
           },
         ],
-      };
+      });
 
-      await transporter.sendMail(mailOptions);
-
-      // Clean up the zip file after sending
+      // Cleanup
       fs.unlinkSync(zipFilePath);
 
       res
@@ -129,13 +154,10 @@ Here are your files in a zip archive. Total Price: ₱${totalPrice}.00`,
   }
 );
 
-app.get("/", (req: Request, res: Response): void => {
-  res.json({ message: "Server is running..." });
-});
-
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  console.log("Allowed origins:", allowedOrigins);
 });
 
 export default app;

@@ -77,7 +77,7 @@ const PrintFiles = () => {
       );
 
       const response = await fetch(
-        import.meta.env.VITE_SEND_EMAIL_API,
+        `${import.meta.env.VITE_API_URL}/send-email`,
         {
           method: "POST",
           body: formData,
