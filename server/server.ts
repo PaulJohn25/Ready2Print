@@ -1,11 +1,27 @@
 import express, { Request, Response, NextFunction } from "express";
+import * as admin from "firebase-admin";
 import multer from "multer";
 import nodemailer from "nodemailer";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import cors from "cors";
+import { v4 as uuidv4 } from "uuid"; // To generate unique file names
 
 dotenv.config();
+
+const serviceAccount = JSON.parse(
+  Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT || "", "base64").toString(
+    "utf-8"
+  )
+);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+});
+
+const bucket = admin.storage().bucket();
+const firestore = admin.firestore();
 
 const app = express();
 
@@ -85,6 +101,30 @@ app.post(
         return;
       }
 
+      const uploadFileUrls: string[] = [];
+
+      for (const file of uploadedFiles) {
+        const fileName = `${uuidv4()}-${file.originalname}`;
+        const fileUpload = bucket.file(fileName);
+        await fileUpload.save(file.buffer, {
+          contentType: file.mimetype,
+          public: true,
+        });
+
+        const fileUrl = `https://storage.googleapis.com/${process.env.FIREBASE_STORAGE_BUCKET}/${fileName}`;
+        uploadFileUrls.push(fileUrl);
+      }
+
+      // Save print job details in Firestore
+      const docRef = await firestore.collection("printJobs").add({
+        name,
+        email,
+        files: pdfDetails,
+        uploadFileUrls,
+        totalPrice,
+        timeStamp: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
       // Create email content
       const filesDetails = pdfDetails
         .map(
@@ -95,22 +135,24 @@ app.post(
 
       const emailBody = `
       New Print Job Submission
-
+      
       Customer Details:
       Name: ${name}
       Email: ${email}
 
-      Files and Pricing:
+      Files and Pricing
       ${filesDetails}
 
       Total Price: ₱${totalPrice}.00
+
+      Files uploaded: ${uploadFileUrls.join(", ")}
       `;
 
       // Create attachments using buffer instead of file path
-      const attachments = uploadedFiles.map((file) => ({
-        filename: file.originalname,
-        content: file.buffer, // Use buffer instead of file path
-      }));
+      // const attachments = uploadedFiles.map((file) => ({
+      //   filename: file.originalname,
+      //   content: file.buffer, // Use buffer instead of file path
+      // }));
 
       const mailOptions = {
         from: email,
@@ -118,7 +160,6 @@ app.post(
         replyTo: email,
         subject: "New Print Job Submission",
         text: emailBody,
-        attachments,
       };
 
       await transporter.sendMail(mailOptions);
