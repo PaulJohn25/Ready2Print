@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 
 interface FileDetails {
-  id: string;
+  id: number;
   fileName: string;
   price: number;
 }
@@ -89,6 +89,7 @@ app.post(
 
       try {
         pdfDetails = JSON.parse(files);
+        console.log("Parsed file details:", pdfDetails);
       } catch (error) {
         res.status(400).json({ message: "Invalid prices format" });
         return;
