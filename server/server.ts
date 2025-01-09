@@ -1,13 +1,16 @@
 import express, { Request, Response, NextFunction } from "express";
 import multer from "multer";
 import nodemailer from "nodemailer";
-import archiver from "archiver";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
-import fs from "fs";
-import path from "path";
+
 import cors from "cors";
-import { v4 as uuidv4 } from "uuid";
+
+interface FileDetails {
+  id: string;
+  fileName: string;
+  price: number;
+}
 
 dotenv.config();
 
@@ -32,8 +35,8 @@ app.use(
 );
 
 // Increase payload size limits
-app.use(bodyParser.json({ limit: "50mb" }));
-app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Configure multer with error handling and size limits
 const storage = multer.memoryStorage();
@@ -41,104 +44,98 @@ const upload = multer({
   storage: storage,
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB limit
-    files: 10, // Maximum 10 files
   },
-}).array("uploadedFiles");
+});
 
-// Wrapper for multer error handling
-const uploadMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  upload(req, res, function (err) {
-    if (err instanceof multer.MulterError) {
-      return res.status(400).json({
-        message: "File upload error",
-        error: err.message,
-      });
-    } else if (err) {
-      return res.status(500).json({
-        message: "Unknown error",
-        error: err.message,
-      });
-    }
-    next();
-  });
-};
-
-// Enhanced error handling for email transport
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD,
   },
-  maxConnections: 5,
-  pool: true,
 });
 
-// Email route with better error handling
+// Verify the connection
+transporter.verify((error, success) => {
+  if (error) {
+    console.log("Error connecting to email server:", error);
+  } else {
+    console.log("Email server is ready to send messages!");
+  }
+});
+
 app.post(
   "/send-email",
-  uploadMiddleware,
+  upload.array("uploadedFiles"),
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const { name, email, totalPrice } = req.body;
+      const { name, email, files, totalPrice } = req.body;
       const uploadedFiles = req.files as Express.Multer.File[];
 
       // Validate required fields
       if (!name || !email || !uploadedFiles || uploadedFiles.length === 0) {
         res.status(400).json({
           message: "Missing required fields",
-          received: {
-            name,
-            email,
-            totalPrice,
-            filesCount: uploadedFiles?.length || 0,
-          },
+          received: { name, email, totalPrice },
         });
         return;
       }
 
-      const zipFileName = `${uuidv4()}.zip`;
-      const zipFilePath = path.join(__dirname, zipFileName);
-      const output = fs.createWriteStream(zipFilePath);
-      const archive = archiver("zip", { zlib: { level: 9 } });
+      if (!uploadedFiles || uploadedFiles.length === 0) {
+        res.status(400).json({ message: "No files uploaded" });
+        return;
+      }
 
-      // Promise wrapper for zip creation
-      await new Promise((resolve, reject) => {
-        output.on("close", resolve);
-        archive.on("error", reject);
-        archive.pipe(output);
+      let pdfDetails: FileDetails[];
 
-        uploadedFiles.forEach((file) => {
-          archive.append(file.buffer, { name: file.originalname });
-        });
+      try {
+        pdfDetails = JSON.parse(files);
+      } catch (error) {
+        res.status(400).json({ message: "Invalid prices format" });
+        return;
+      }
 
-        archive.finalize();
-      });
+      // Create email content
 
-      // Send email
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: "Your Uploaded Files",
-        text: `Hello ${name},\n\nHere are your files in a zip archive. Total Price: ₱${totalPrice}.00`,
-        attachments: [
-          {
-            filename: zipFileName,
-            path: zipFilePath,
-          },
-        ],
-      });
+      const filesDetails = pdfDetails
+        .map((file) => {
+          `File ID: ${file.id}, File Name: ${file.fileName}, Price: ₱${file.price}`;
+        })
+        .join("\n");
 
-      // Cleanup
-      fs.unlinkSync(zipFilePath);
+      const emailBody = `
+      New Print Job Submission
 
-      res
-        .status(200)
-        .json({ message: "Email sent successfully with zip file" });
+      Customer Details:
+      Name: ${name}
+      Email: ${email}
+
+      Files and Pricing:
+      ${filesDetails}
+
+      Total Price: ₱${totalPrice}.00
+      `;
+
+      const attachments = uploadedFiles.map((file) => ({
+        fileName: file.originalname,
+        content: file.buffer,
+      }));
+
+      const mailOptions = {
+        from: email,
+        to: process.env.EMAIL_USER,
+        replyTo: email,
+        subject: "New Print Job Submission",
+        text: emailBody,
+        attachments,
+      };
+
+      await transporter.sendMail(mailOptions);
+      res.status(200).json({ message: "Email sent successfully" });
     } catch (error) {
       console.error("Error details:", error);
       res.status(500).json({
-        message: "Failed to process and send email",
+        message: "Failed to send email",
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }
