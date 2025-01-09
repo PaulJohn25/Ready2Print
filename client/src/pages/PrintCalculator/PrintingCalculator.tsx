@@ -183,8 +183,7 @@ const PrintingCalculator = () => {
                 Click to select files
               </p>
               <p className="text-xs text-gray-500 font-medium font-montserrat">
-                {/* Only <strong>PDF</strong> files are accepted */}
-                Supported format: <strong>.PDF</strong>
+                Only <strong>PDF</strong> files are accepted
               </p>
             </label>
           </div>
