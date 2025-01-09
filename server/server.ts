@@ -3,7 +3,6 @@ import multer from "multer";
 import nodemailer from "nodemailer";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
-
 import cors from "cors";
 
 interface FileDetails {
@@ -96,7 +95,6 @@ app.post(
       }
 
       // Create email content
-
       const filesDetails = pdfDetails
         .map((file) => {
           `File ID: ${file.id}, File Name: ${file.fileName}, Price: ₱${file.price}`;
@@ -117,7 +115,7 @@ app.post(
       `;
 
       const attachments = uploadedFiles.map((file) => ({
-        fileName: file.originalname,
+        filename: file.originalname,
         content: file.buffer,
       }));
 
