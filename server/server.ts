@@ -24,7 +24,7 @@ if (process.env.ALLOWED_ORIGINS) {
 // Configure CORS with proper error handling
 app.use(
   cors({
-    origin: "https://ready2-print.vercel.app",
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"],
     // allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true, // Enable credentials (cookies, authorization headers, etc.)
